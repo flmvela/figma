@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import { Plus, CheckCircle, XCircle, Edit, Trash2, Sparkles, BookOpen } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Plus, CheckCircle, XCircle, Edit, Trash2, Sparkles, BookOpen, Filter } from "lucide-react";
 
 interface LearningGoal {
   id: string;
@@ -56,6 +58,7 @@ interface LearningGoalsTabProps {
 export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
   const [goals, setGoals] = useState(mockGoals);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const handleApprove = (goalId: string) => {
     setGoals(prev => prev.map(goal => 
@@ -116,31 +119,64 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3>Learning Goals</h3>
-          <p className="text-muted-foreground">
-            Manage and organize learning objectives for this concept
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleGenerateGoals} disabled={isGenerating}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            {isGenerating ? "Generating..." : "Generate Goals"}
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Manual Goal
-          </Button>
-        </div>
-      </div>
+  const filteredGoals = filterStatus === "all" 
+    ? goals 
+    : goals.filter(goal => goal.status === filterStatus);
 
-      {/* Goals List */}
-      <div className="space-y-4">
-        {goals.map((goal, index) => (
+  return (
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h3>Learning Goals</h3>
+            <p className="text-muted-foreground">
+              Manage and organize learning objectives for this concept
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-40">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleGenerateGoals} 
+                  disabled={isGenerating}
+                  size="icon"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isGenerating ? "Generating..." : "Generate goals"}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add manual goal</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Goals List */}
+        <div className="space-y-4">
+          {filteredGoals.map((goal, index) => (
           <Card key={goal.id}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -196,24 +232,40 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
               )}
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {goals.length === 0 && (
-        <Card className="p-8 text-center">
-          <CardContent>
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No learning goals yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by generating goals or adding them manually
-            </p>
-            <Button onClick={handleGenerateGoals}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Generate Goals
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {filteredGoals.length === 0 && filterStatus !== "all" && (
+          <Card className="p-8 text-center">
+            <CardContent>
+              <Filter className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No goals found</h3>
+              <p className="text-muted-foreground mb-4">
+                No learning goals match the selected filter criteria
+              </p>
+              <Button variant="outline" onClick={() => setFilterStatus("all")}>
+                Show all goals
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {goals.length === 0 && (
+          <Card className="p-8 text-center">
+            <CardContent>
+              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No learning goals yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Get started by generating goals or adding them manually
+              </p>
+              <Button onClick={handleGenerateGoals}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate Goals
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
