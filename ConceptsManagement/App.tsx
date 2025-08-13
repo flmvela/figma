@@ -1,13 +1,11 @@
-import { TopNavigation } from './components/TopNavigation';
-import { ConceptManagement } from './components/ConceptManagement';
+import { AppHeader } from "./components/AppHeader";
+import { ConceptDetailPage } from "./components/ConceptDetailPage";
 
 export default function App() {
   return (
-    <div className="size-full flex flex-col">
-      <TopNavigation />
-      <div className="flex-1">
-        <ConceptManagement />
-      </div>
+    <div className="bg-background">
+      <AppHeader />
+      <ConceptDetailPage />
     </div>
   );
 }
