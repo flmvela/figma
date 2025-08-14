@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { OverviewTab } from "./OverviewTab";
-import { LearningGoalsTab } from "./LearningGoalsTab";
 import { RelationshipsTab } from "./RelationshipsTab";
 import { SettingsTab } from "./SettingsTab";
 import { ArrowLeft, Save } from "lucide-react";
@@ -13,7 +12,7 @@ const mockConcept = {
   title: "Music Theory Fundamentals",
   description: "Core concepts and principles that form the foundation of musical understanding, including scales, intervals, chords, and harmonic progressions.",
   parentConcept: "Music Education",
-  totalLearningGoals: 12,
+  childConcepts: ["Musical Intervals", "Chord Construction", "Scale Modes"],
   totalRelationships: 8,
   difficultyLevel: "Intermediate",
 };
@@ -59,19 +58,14 @@ export function ConceptDetailPage() {
 
       {/* Tabbed Interface */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="learning-goals">Learning Goals</TabsTrigger>
           <TabsTrigger value="relationships">Relationships</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
           <OverviewTab concept={concept} updateConcept={updateConcept} />
-        </TabsContent>
-
-        <TabsContent value="learning-goals">
-          <LearningGoalsTab conceptId={concept.id} />
         </TabsContent>
 
         <TabsContent value="relationships">

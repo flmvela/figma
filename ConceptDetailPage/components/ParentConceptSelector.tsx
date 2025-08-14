@@ -33,15 +33,9 @@ const mockParentConcepts: ParentConcept[] = [
 
 export function ParentConceptSelector({ value, onValueChange }: ParentConceptSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
 
   const selectedConcept = mockParentConcepts.find(concept => 
     concept.title === value || concept.id === value
-  );
-
-  const filteredConcepts = mockParentConcepts.filter(concept =>
-    concept.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-    concept.description?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   return (
@@ -51,59 +45,51 @@ export function ParentConceptSelector({ value, onValueChange }: ParentConceptSel
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-10 bg-input-background border-input"
+          className="w-full h-12 justify-between"
         >
-          {selectedConcept ? selectedConcept.title : "Select parent concept..."}
+          {selectedConcept ? selectedConcept.title : "Search and select parent concept..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <CommandInput 
-            placeholder="Search parent concepts..." 
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
+          <CommandInput placeholder="Search concepts..." />
           <CommandList>
             <CommandEmpty>No concepts found.</CommandEmpty>
             <CommandGroup>
-              {filteredConcepts.map((concept) => (
+              {mockParentConcepts.map((concept) => (
                 <CommandItem
                   key={concept.id}
-                  value={concept.id}
-                  onSelect={() => {
-                    onValueChange(concept.title);
+                  value={concept.title}
+                  onSelect={(currentValue) => {
+                    onValueChange(currentValue);
                     setOpen(false);
-                    setSearchValue("");
                   }}
                   className={cn(
-                    "flex flex-col items-start p-3 cursor-pointer",
                     concept.isRoot && "bg-orange-400 text-white data-[selected=true]:bg-orange-500 hover:bg-orange-500"
                   )}
                 >
-                  <div className="flex items-center w-full">
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedConcept?.id === concept.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex-1">
-                      <div className={cn(
-                        "font-medium",
-                        concept.isRoot && "text-white"
-                      )}>
-                        {concept.title}
-                      </div>
-                      {concept.description && (
-                        <div className={cn(
-                          "text-sm mt-0.5",
-                          concept.isRoot ? "text-orange-100" : "text-muted-foreground"
-                        )}>
-                          {concept.description}
-                        </div>
-                      )}
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedConcept?.title === concept.title ? "opacity-100" : "opacity-0",
+                      concept.isRoot && "text-white"
+                    )}
+                  />
+                  <div className="flex-1">
+                    <div className={cn(
+                      concept.isRoot && "text-white"
+                    )}>
+                      {concept.title}
                     </div>
+                    {concept.description && concept.description !== "No description" && (
+                      <div className={cn(
+                        "text-sm mt-0.5",
+                        concept.isRoot ? "text-orange-100" : "text-muted-foreground"
+                      )}>
+                        {concept.description}
+                      </div>
+                    )}
                   </div>
                 </CommandItem>
               ))}

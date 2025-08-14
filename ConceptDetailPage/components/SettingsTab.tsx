@@ -77,21 +77,21 @@ export function SettingsTab({ concept, updateConcept }: SettingsTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <Label htmlFor="parent-concept" className="mb-3 block">Parent Concept</Label>
+          <div className="space-y-2">
+            <Label htmlFor="parent-concept">Parent Concept</Label>
             <ParentConceptSelector 
               value={concept.parentConcept} 
               onValueChange={handleParentConceptChange}
             />
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground">
               Move this concept to a different location in the hierarchy
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="difficulty-level" className="mb-3 block">Difficulty Level</Label>
+          <div className="space-y-2">
+            <Label htmlFor="difficulty-level">Difficulty Level</Label>
             <Select value={concept.difficultyLevel.toLowerCase()} onValueChange={handleDifficultyChange}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -102,7 +102,7 @@ export function SettingsTab({ concept, updateConcept }: SettingsTabProps) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground">
               Set the appropriate difficulty level for learners
             </p>
           </div>

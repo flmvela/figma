@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { BookOpen, GitBranch, BarChart3, Edit3, Check, X } from "lucide-react";
+import { BookOpen, GitBranch, BarChart3, Edit3, Check, X, Users, ArrowUp, ArrowDown } from "lucide-react";
 
 interface ConceptType {
   id: string;
   title: string;
   description: string;
   parentConcept: string;
-  totalLearningGoals: number;
+  childConcepts: string[];
   totalRelationships: number;
   difficultyLevel: string;
 }
@@ -96,13 +96,24 @@ export function OverviewTab({ concept, updateConcept }: OverviewTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Learning Goals</p>
-                <p className="text-2xl font-semibold">{concept.totalLearningGoals}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Parent & Children</p>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <ArrowUp className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{concept.parentConcept}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ArrowDown className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{concept.childConcepts.length} child concepts</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -139,16 +150,12 @@ export function OverviewTab({ concept, updateConcept }: OverviewTabProps) {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Links */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>Quick Links</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline">
-            <BookOpen className="h-4 w-4 mr-2" />
-            Add Learning Goal
-          </Button>
           <Button variant="outline">
             <GitBranch className="h-4 w-4 mr-2" />
             Add Relationship
@@ -156,6 +163,10 @@ export function OverviewTab({ concept, updateConcept }: OverviewTabProps) {
           <Button variant="outline">
             <BarChart3 className="h-4 w-4 mr-2" />
             View Analytics
+          </Button>
+          <Button variant="outline">
+            <Users className="h-4 w-4 mr-2" />
+            Manage Hierarchy
           </Button>
         </CardContent>
       </Card>

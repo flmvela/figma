@@ -6,7 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Plus, ArrowRight, ArrowLeft, Link, Trash2, Search } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Plus, ArrowRight, ArrowLeft, Link, Trash2, Search, Edit, Save, X, Check, ChevronsUpDown } from "lucide-react";
 
 interface Relationship {
   id: string;
@@ -69,12 +71,34 @@ interface RelationshipsTabProps {
 export function RelationshipsTab({ conceptId }: RelationshipsTabProps) {
   const [relationships, setRelationships] = useState(mockRelationships);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingRelationship, setEditingRelationship] = useState<Relationship | null>(null);
   const [newRelationship, setNewRelationship] = useState({
     type: '',
     targetConcept: '',
     description: ''
   });
+  const [openTargetConcept, setOpenTargetConcept] = useState(false);
+  const [openEditTargetConcept, setOpenEditTargetConcept] = useState(false);
+
+  // Mock available concepts for searching
+  const availableConcepts = [
+    "Musical Intervals",
+    "Chord Construction", 
+    "Scale Modes",
+    "Circle of Fifths",
+    "Music Education",
+    "Harmony Theory",
+    "Rhythm Patterns",
+    "Note Reading",
+    "Key Signatures",
+    "Chord Progressions",
+    "Voice Leading",
+    "Counterpoint",
+    "Musical Form",
+    "Composition Techniques"
+  ];
 
   const handleDeleteRelationship = (relationshipId: string) => {
     setRelationships(prev => prev.filter(rel => rel.id !== relationshipId));
@@ -91,7 +115,24 @@ export function RelationshipsTab({ conceptId }: RelationshipsTabProps) {
       };
       setRelationships(prev => [...prev, relationship]);
       setNewRelationship({ type: '', targetConcept: '', description: '' });
+      setOpenTargetConcept(false);
       setIsAddDialogOpen(false);
+    }
+  };
+
+  const handleEditRelationship = (relationship: Relationship) => {
+    setEditingRelationship(relationship);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateRelationship = () => {
+    if (editingRelationship) {
+      setRelationships(prev => prev.map(rel => 
+        rel.id === editingRelationship.id ? editingRelationship : rel
+      ));
+      setEditingRelationship(null);
+      setOpenEditTargetConcept(false);
+      setIsEditDialogOpen(false);
     }
   };
 
@@ -159,71 +200,217 @@ export function RelationshipsTab({ conceptId }: RelationshipsTabProps) {
             Manage connections between this concept and others in the knowledge graph
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Relationship
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Relationship</DialogTitle>
-              <DialogDescription>
-                Create a new relationship between this concept and another concept in the knowledge graph.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="relationship-type">Relationship Type</Label>
-                <Select value={newRelationship.type} onValueChange={(value) => 
-                  setNewRelationship(prev => ({ ...prev, type: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select relationship type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {relationshipTypes.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div>
-                          <div>{type.label}</div>
-                          <div className="text-sm text-muted-foreground">{type.description}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="flex gap-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Relationship
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add New Relationship</DialogTitle>
+                <DialogDescription>
+                  Create a new relationship between this concept and another concept in the knowledge graph.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Select value={newRelationship.type} onValueChange={(value) => 
+                    setNewRelationship(prev => ({ ...prev, type: value }))
+                  }>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Relationship Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {relationshipTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center space-x-2">
+                            <span>{type.label}: {type.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Target Concept</Label>
+                  <Popover open={openTargetConcept} onOpenChange={setOpenTargetConcept}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openTargetConcept}
+                        className="w-full h-12 justify-between"
+                      >
+                        {newRelationship.targetConcept || "Search and select concept..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search concepts..." />
+                        <CommandList>
+                          <CommandEmpty>No concept found.</CommandEmpty>
+                          <CommandGroup>
+                            {availableConcepts.map((concept) => (
+                              <CommandItem
+                                key={concept}
+                                value={concept}
+                                onSelect={(currentValue) => {
+                                  setNewRelationship(prev => ({ ...prev, targetConcept: currentValue }));
+                                  setOpenTargetConcept(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    newRelationship.targetConcept === concept ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                {concept}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Input
+                    id="description"
+                    value={newRelationship.description}
+                    onChange={(e) => setNewRelationship(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe this relationship"
+                    className="h-12"
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <Button onClick={handleAddRelationship} size="lg">
+                    Add Relationship
+                  </Button>
+                  <Button variant="outline" size="lg" onClick={() => {
+                    setNewRelationship({ type: '', targetConcept: '', description: '' });
+                    setOpenTargetConcept(false);
+                    setIsAddDialogOpen(false);
+                  }}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <Label htmlFor="target-concept">Target Concept</Label>
-                <Input
-                  id="target-concept"
-                  value={newRelationship.targetConcept}
-                  onChange={(e) => setNewRelationship(prev => ({ ...prev, targetConcept: e.target.value }))}
-                  placeholder="Search or enter concept name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Input
-                  id="description"
-                  value={newRelationship.description}
-                  onChange={(e) => setNewRelationship(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe this relationship"
-                />
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleAddRelationship}>Add Relationship</Button>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Relationship Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Relationship</DialogTitle>
+                <DialogDescription>
+                  Update the relationship details.
+                </DialogDescription>
+              </DialogHeader>
+              {editingRelationship && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Select 
+                      value={editingRelationship.type} 
+                      onValueChange={(value) => 
+                        setEditingRelationship(prev => prev ? { ...prev, type: value as Relationship['type'] } : null)
+                      }
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Relationship Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {relationshipTypes.map(type => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex items-center space-x-2">
+                              <span>{type.label}: {type.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Target Concept</Label>
+                    <Popover open={openEditTargetConcept} onOpenChange={setOpenEditTargetConcept}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openEditTargetConcept}
+                          className="w-full h-12 justify-between"
+                        >
+                          {editingRelationship.targetConcept || "Search and select concept..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search concepts..." />
+                          <CommandList>
+                            <CommandEmpty>No concept found.</CommandEmpty>
+                            <CommandGroup>
+                              {availableConcepts.map((concept) => (
+                                <CommandItem
+                                  key={concept}
+                                  value={concept}
+                                  onSelect={(currentValue) => {
+                                    setEditingRelationship(prev => prev ? { ...prev, targetConcept: currentValue } : null);
+                                    setOpenEditTargetConcept(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      editingRelationship.targetConcept === concept ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {concept}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-description">Description (Optional)</Label>
+                    <Input
+                      id="edit-description"
+                      value={editingRelationship.description || ''}
+                      onChange={(e) => setEditingRelationship(prev => prev ? { ...prev, description: e.target.value } : null)}
+                      placeholder="Describe this relationship"
+                      className="h-12"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <Button onClick={handleUpdateRelationship} size="lg">
+                      Update Relationship
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={() => {
+                      setEditingRelationship(null);
+                      setOpenEditTargetConcept(false);
+                      setIsEditDialogOpen(false);
+                    }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Search */}
@@ -259,13 +446,22 @@ export function RelationshipsTab({ conceptId }: RelationshipsTabProps) {
                     )}
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => handleDeleteRelationship(relationship.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleEditRelationship(relationship)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDeleteRelationship(relationship.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

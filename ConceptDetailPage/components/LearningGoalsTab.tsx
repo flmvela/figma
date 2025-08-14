@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Plus, CheckCircle, XCircle, Edit, Trash2, Sparkles, BookOpen, Filter } from "lucide-react";
+import { Plus, CheckCircle, XCircle, Edit, Trash2, Sparkles, BookOpen, Filter, Flag, AlertTriangle } from "lucide-react";
 
 interface LearningGoal {
   id: string;
@@ -13,7 +13,7 @@ interface LearningGoal {
   description: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  sequence: number;
 }
 
 const mockGoals: LearningGoal[] = [
@@ -23,7 +23,7 @@ const mockGoals: LearningGoal[] = [
     description: "Learn the pattern of whole and half steps that create major and minor scales, and be able to construct them starting from any note.",
     status: "approved",
     createdAt: "2024-01-15",
-    difficulty: "medium"
+    sequence: 1
   },
   {
     id: "2",
@@ -31,7 +31,7 @@ const mockGoals: LearningGoal[] = [
     description: "Develop the ability to recognize perfect fifths, major thirds, minor thirds, and other common intervals through ear training exercises.",
     status: "approved",
     createdAt: "2024-01-14",
-    difficulty: "hard"
+    sequence: 2
   },
   {
     id: "3",
@@ -39,7 +39,7 @@ const mockGoals: LearningGoal[] = [
     description: "Construct major, minor, diminished, and augmented triads using the proper intervals and note relationships.",
     status: "pending",
     createdAt: "2024-01-13",
-    difficulty: "medium"
+    sequence: 3
   },
   {
     id: "4",
@@ -47,7 +47,7 @@ const mockGoals: LearningGoal[] = [
     description: "Recognize and analyze common chord progressions like I-V-vi-IV and understand their harmonic function.",
     status: "pending",
     createdAt: "2024-01-12",
-    difficulty: "hard"
+    sequence: 4
   }
 ];
 
@@ -58,7 +58,7 @@ interface LearningGoalsTabProps {
 export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
   const [goals, setGoals] = useState(mockGoals);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("approved");
 
   const handleApprove = (goalId: string) => {
     setGoals(prev => prev.map(goal => 
@@ -86,42 +86,35 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
         description: "Understand and memorize the circle of fifths to quickly identify key signatures and relationships between keys.",
         status: "pending",
         createdAt: new Date().toISOString().split('T')[0],
-        difficulty: "medium"
+        sequence: goals.length + 1
       };
       setGoals(prev => [newGoal, ...prev]);
       setIsGenerating(false);
     }, 2000);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusFlagColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'text-green-600';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'text-red-600';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'text-yellow-600';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'hard':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'text-gray-600';
     }
   };
 
   const filteredGoals = filterStatus === "all" 
     ? goals 
     : goals.filter(goal => goal.status === filterStatus);
+
+  const hasPendingGoals = goals.some(goal => goal.status === 'pending');
+
+  const handleShowSuggested = () => {
+    setFilterStatus("pending");
+  };
 
   return (
     <TooltipProvider>
@@ -135,18 +128,37 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
             </p>
           </div>
           <div className="flex gap-2">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-40">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-1">
+              {hasPendingGoals && filterStatus !== "pending" && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleShowSuggested}
+                      className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View suggested goals</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-40">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -182,12 +194,12 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg">{goal.title}</CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getStatusColor(goal.status)}>
-                      {goal.status}
-                    </Badge>
-                    <Badge className={getDifficultyColor(goal.difficulty)}>
-                      {goal.difficulty}
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-1">
+                      <Flag className={`h-4 w-4 ${getStatusFlagColor(goal.status)}`} />
+                    </div>
+                    <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                      #{goal.sequence}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
                       Created: {goal.createdAt}
@@ -243,8 +255,8 @@ export function LearningGoalsTab({ conceptId }: LearningGoalsTabProps) {
               <p className="text-muted-foreground mb-4">
                 No learning goals match the selected filter criteria
               </p>
-              <Button variant="outline" onClick={() => setFilterStatus("all")}>
-                Show all goals
+              <Button variant="outline" onClick={() => setFilterStatus("approved")}>
+                Show approved goals
               </Button>
             </CardContent>
           </Card>
